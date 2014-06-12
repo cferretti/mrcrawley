@@ -41,12 +41,28 @@ var createSiteMap = function(db){
 				    	var founded = url.resolve(object.url, matches[3]);
 				    	var type = mime.lookup(founded);
 				    	//If html and not in links of sitemap then add it and add it to worker
-				    	if(type == 'application/octet-stream' && sitemap.links.indexOf(founded) < 0){
+				    	if((type == 'application/octet-stream' || type == 'text/html') && sitemap.links.indexOf(founded) < 0){
 				    		sitemap.links.push(founded);
 				    		worker.push({ url : founded, sitemapId : sitemap._id });
 							console.log('Added and entered => ' +  founded );
-				    	}else if(sitemap.links.indexOf(founded) < 0){ //Else if not exit add it
-				    		sitemap.links.push(founded);
+				    	}else if(sitemap.assets.images.indexOf(founded) < 0 && sitemap.assets.scripts.indexOf(founded) < 0 && 
+				    	 sitemap.assets.styles.indexOf(founded) < 0 && sitemap.assets.others.indexOf(founded) < 0 && sitemap.links.indexOf(founded) < 0){ //Else if not exit add it
+				    		switch(type){
+				    			case 'image/png':
+				    			case 'image/jpeg':
+				    			case 'image/gif':
+				    				sitemap.assets.images.push(founded);
+				    			break;
+				    			case 'application/javascript' :
+				    				sitemap.assets.scripts.push(founded);
+				    			break;
+				    			case 'text/css' :
+				    				sitemap.assets.styles.push(founded);
+				    			break;
+				    			default :
+				    				sitemap.assets.others.push(founded);
+				    			break;
+				    		}
 							console.log('Added  => ' +  founded );
 				    	}
 
@@ -70,16 +86,22 @@ var createSiteMap = function(db){
 	
 	worker.drain = function drain(){
 		console.log('******************Finish****************');
-		process.exit();
+		db.collection('sitemap').findOne({ _id : WEBSITE_URL }, function(error, sitemap){
+			console.log(sitemap);
+			process.exit();
+		});
 	};
 
 	//Insert en db
-	db.collection('sitemap').insert({ links : [ WEBSITE_URL ] }, function(error, result){
-		if(error) {
-          throw error;
-        }
-        //Start once it added to sitemap collection
-		worker.push({ url : WEBSITE_URL, sitemapId : result[0]._id });
-	});
+	db.collection('sitemap').remove({_id : WEBSITE_URL}, function(e){
+		db.collection('sitemap').insert({ _id : WEBSITE_URL, domain : WEBSITE_URL, links : [ WEBSITE_URL ], assets : { images : [], scripts : [], styles : [], others : [] } }, function(error, result){
+			if(error) {
+	          throw error;
+	        }
+	        //Start once it added to sitemap collection
+			worker.push({ url : WEBSITE_URL, sitemapId : result[0]._id });
+		});
+	})
+
 
 }
