@@ -1,0 +1,18 @@
+{
+  "name": "mrcrawley",
+  "version": "0.0.0",
+  "homepage": "https://github.com/cferretti/mrcrawley",
+  "authors": [
+    "Cédric Ferretti <ferretticedric@gmail.com>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "vendor",
+    "test",
+    "tests"
+  ],
+  "private": true
+}
